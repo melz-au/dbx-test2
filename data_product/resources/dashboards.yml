@@ -1,0 +1,27 @@
+# ABS Trade Data Dashboard
+resources:
+  dashboards:
+    abs_trade_dashboard:
+      display_name: "ABS Trade Data Analysis"
+      warehouse_id: "${var.warehouse_id}"
+      # Reference to the existing dashboard
+      # Dashboard ID: 01f1321d5f29145c8dbff9df0ddf464c
+      
+      # Dashboard features ABS trade data from:
+      # - workspace.abs_trade.metadata
+      # - workspace.abs_trade.raw_json
+      # - workspace.default.abs_trade_serv_state_cy_metadata
+      # - workspace.default.abs_trade_serv_state_cy_raw_json
+      
+      tags:
+        - key: "source"
+          value: "abs"
+        - key: "type"
+          value: "analytics"
+        - key: "domain"
+          value: "trade"
+
+# Note: To deploy an existing dashboard with the bundle, you would either:
+# 1. Export the dashboard definition and embed it in the bundle
+# 2. Reference the dashboard ID for tracking/documentation
+# 3. Use the dashboard as a template for deployment

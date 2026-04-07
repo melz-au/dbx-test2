@@ -1,0 +1,18 @@
+# ABS Trade Data Table References
+resources:
+  registered_models:
+    abs_trade_data:
+      name: abs_trade_data
+      comment: "Reference to ABS (Australian Bureau of Statistics) Trade Data"
+      tags:
+        - key: "source"
+          value: "abs"
+        - key: "domain"
+          value: "trade"
+
+# Table references for data product
+# Note: These tables are referenced from the workspace catalog
+# - workspace.abs_trade.metadata
+# - workspace.abs_trade.raw_json
+# - workspace.default.abs_trade_serv_state_cy_metadata
+# - workspace.default.abs_trade_serv_state_cy_raw_json
