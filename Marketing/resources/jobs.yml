@@ -1,0 +1,106 @@
+# ABS Trade Data Product - Quality Monitoring Jobs
+resources:
+  jobs:
+    # Daily quality checks job
+    abs_trade_quality_checks:
+      name: "ABS Trade Data - Quality Checks"
+      description: "Automated data quality validation based on data contract"
+      
+      # Schedule: Daily at 2 AM (after data refresh)
+      schedule:
+        quartz_cron_expression: "0 0 2 * * ?"
+        timezone_id: "UTC"
+        pause_status: "UNPAUSED"
+      
+      # Email notifications
+      email_notifications:
+        on_failure:
+          - melissaslattery@gmail.com
+        on_success:
+          - melissaslattery@gmail.com
+      
+      # Webhook notifications (optional)
+      # webhook_notifications:
+      #   on_failure:
+      #     - id: "slack_webhook"
+      
+      # Job parameters
+      parameters:
+        - name: "contract_path"
+          default: "/Workspace/Users/melissaslattery@gmail.com/dbx-test2/data_product/resources/data_contract.yml"
+        - name: "fail_on_error"
+          default: "true"
+      
+      tasks:
+        - task_key: "validate_quality"
+          description: "Run data quality checks against contract"
+          
+          notebook_task:
+            notebook_path: "/Users/melissaslattery@gmail.com/quality_checks"
+            base_parameters:
+              contract_path: "{{job.parameters.contract_path}}"
+              fail_on_error: "{{job.parameters.fail_on_error}}"
+          
+          # Use serverless compute
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 1
+            spark_conf:
+              "spark.databricks.delta.preview.enabled": "true"
+          
+          timeout_seconds: 3600
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          retry_on_timeout: true
+      
+      # Job-level tags
+      tags:
+        environment: "production"
+        product: "abs_trade"
+        purpose: "quality_monitoring"
+        owner: "melissaslattery@gmail.com"
+      
+      max_concurrent_runs: 1
+      timeout_seconds: 7200
+      
+      # Git integration (optional)
+      # git_source:
+      #   git_url: "https://github.com/your-org/your-repo"
+      #   git_provider: "github"
+      #   git_branch: "main"
+    
+    # On-demand schema validation job
+    abs_trade_schema_validation:
+      name: "ABS Trade Data - Schema Validation"
+      description: "Validate table schemas match data contract"
+      
+      # Manual trigger only (no schedule)
+      
+      email_notifications:
+        on_failure:
+          - melissaslattery@gmail.com
+      
+      tasks:
+        - task_key: "validate_schema"
+          description: "Validate table schemas"
+          
+          notebook_task:
+            notebook_path: "/Users/melissaslattery@gmail.com/quality_checks"
+            base_parameters:
+              check_type: "schema_only"
+              contract_path: "/Workspace/Users/melissaslattery@gmail.com/dbx-test2/data_product/resources/data_contract.yml"
+          
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 1
+          
+          timeout_seconds: 1800
+      
+      tags:
+        environment: "production"
+        product: "abs_trade"
+        purpose: "schema_validation"
+      
+      max_concurrent_runs: 1

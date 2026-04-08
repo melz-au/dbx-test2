@@ -1,0 +1,351 @@
+# ABS Trade Data Product Contract
+# Version: 1.0.0
+# This contract defines schema, quality expectations, SLAs, and governance for ABS trade data
+
+dataProduct:
+  name: "ABS Trade Data Product"
+  version: "1.0.0"
+  description: "Australian Bureau of Statistics International Trade Data"
+  owner: "melissaslattery@gmail.com"
+  domain: "trade"
+  status: "production"
+  
+  # Service Level Agreements
+  sla:
+    availability: "99.9%"
+    freshness: "24h"  # Data should be no older than 24 hours
+    completeness: "95%"  # Minimum 95% completeness
+    accuracy: "99%"  # Minimum 99% accuracy for critical fields
+    retention: "7y"  # 7 years data retention
+    support_hours: "business_hours"
+    response_time: "4h"  # Support response within 4 hours
+
+  # Data consumers and use cases
+  consumers:
+    - name: "Trade Analysis Dashboard"
+      type: "dashboard"
+      criticality: "high"
+      contact: "melissaslattery@gmail.com"
+    - name: "State Trade Reports"
+      type: "reporting"
+      criticality: "medium"
+      contact: "melissaslattery@gmail.com"
+
+# Table Contracts
+tables:
+  # ABS Trade Metadata Table
+  - name: "workspace.abs_trade.metadata"
+    description: "Structured metadata about ABS trade dataflows"
+    type: "dimension"
+    refresh_frequency: "daily"
+    partition_keys: []
+    
+    schema:
+      columns:
+        - name: "agency_id"
+          type: "STRING"
+          nullable: true
+          description: "Statistical agency identifier"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "valid_values"
+              values: ["ABS"]
+              severity: "error"
+        
+        - name: "description"
+          type: "STRING"
+          nullable: true
+          description: "Dataset description"
+          quality_rules:
+            - type: "not_null"
+              severity: "warning"
+            - type: "min_length"
+              value: 10
+              severity: "warning"
+        
+        - name: "id"
+          type: "STRING"
+          nullable: false
+          description: "Unique dataset identifier"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "unique"
+              severity: "error"
+        
+        - name: "is_final"
+          type: "BOOLEAN"
+          nullable: true
+          description: "Whether dataset is finalized"
+          quality_rules:
+            - type: "valid_values"
+              values: [true, false]
+              severity: "error"
+        
+        - name: "name"
+          type: "STRING"
+          nullable: false
+          description: "Dataset name"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "min_length"
+              value: 3
+              severity: "error"
+        
+        - name: "structure_urn"
+          type: "STRING"
+          nullable: true
+          description: "Data structure URN"
+          quality_rules:
+            - type: "pattern"
+              regex: "^urn:.*"
+              severity: "warning"
+        
+        - name: "urn"
+          type: "STRING"
+          nullable: true
+          description: "Dataset URN"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "pattern"
+              regex: "^urn:.*"
+              severity: "error"
+        
+        - name: "version"
+          type: "STRING"
+          nullable: true
+          description: "Dataset version"
+          quality_rules:
+            - type: "pattern"
+              regex: "^\\d+\\.\\d+\\.\\d+$"
+              severity: "warning"
+    
+    quality_expectations:
+      - name: "row_count_minimum"
+        type: "row_count"
+        operator: ">="
+        value: 1
+        severity: "error"
+        message: "Metadata table must contain at least one record"
+      
+      - name: "no_duplicate_ids"
+        type: "unique"
+        columns: ["id"]
+        severity: "error"
+        message: "Dataset IDs must be unique"
+      
+      - name: "valid_agency"
+        type: "valid_values"
+        column: "agency_id"
+        values: ["ABS"]
+        severity: "error"
+        message: "Only ABS agency is supported"
+
+  # ABS Trade Raw JSON Table
+  - name: "workspace.abs_trade.raw_json"
+    description: "Raw API responses from ABS"
+    type: "raw"
+    refresh_frequency: "daily"
+    partition_keys: []
+    
+    schema:
+      columns:
+        - name: "raw_json"
+          type: "STRING"
+          nullable: false
+          description: "Complete raw JSON response from ABS API"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "valid_json"
+              severity: "error"
+            - type: "min_length"
+              value: 10
+              severity: "error"
+    
+    quality_expectations:
+      - name: "row_count_minimum"
+        type: "row_count"
+        operator: ">="
+        value: 1
+        severity: "error"
+        message: "Raw JSON table must contain at least one record"
+      
+      - name: "valid_json_format"
+        type: "custom_sql"
+        query: "SELECT COUNT(*) FROM workspace.abs_trade.raw_json WHERE raw_json IS NULL OR raw_json = ''"
+        operator: "="
+        value: 0
+        severity: "error"
+        message: "All raw_json values must be non-null and non-empty"
+
+  # State-Level Metadata Table
+  - name: "workspace.default.abs_trade_serv_state_cy_metadata"
+    description: "State-level trade metadata"
+    type: "dimension"
+    refresh_frequency: "daily"
+    partition_keys: []
+    
+    schema:
+      columns:
+        - name: "agency_id"
+          type: "STRING"
+          nullable: true
+          description: "Statistical agency identifier"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "valid_values"
+              values: ["ABS"]
+              severity: "error"
+        
+        - name: "description"
+          type: "STRING"
+          nullable: true
+          description: "Dataset description"
+          quality_rules:
+            - type: "not_null"
+              severity: "warning"
+        
+        - name: "id"
+          type: "STRING"
+          nullable: false
+          description: "Unique dataset identifier"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "unique"
+              severity: "error"
+        
+        - name: "is_final"
+          type: "BOOLEAN"
+          nullable: true
+          description: "Whether dataset is finalized"
+        
+        - name: "name"
+          type: "STRING"
+          nullable: false
+          description: "Dataset name"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+        
+        - name: "structure_urn"
+          type: "STRING"
+          nullable: true
+          description: "Data structure URN"
+        
+        - name: "urn"
+          type: "STRING"
+          nullable: true
+          description: "Dataset URN"
+        
+        - name: "version"
+          type: "STRING"
+          nullable: true
+          description: "Dataset version"
+    
+    quality_expectations:
+      - name: "row_count_minimum"
+        type: "row_count"
+        operator: ">="
+        value: 1
+        severity: "error"
+
+  # State-Level Raw JSON Table
+  - name: "workspace.default.abs_trade_serv_state_cy_raw_json"
+    description: "State-level trade raw data"
+    type: "raw"
+    refresh_frequency: "daily"
+    partition_keys: []
+    
+    schema:
+      columns:
+        - name: "raw_json"
+          type: "STRING"
+          nullable: false
+          description: "Raw JSON data for state-level trade"
+          quality_rules:
+            - type: "not_null"
+              severity: "error"
+            - type: "valid_json"
+              severity: "error"
+    
+    quality_expectations:
+      - name: "row_count_minimum"
+        type: "row_count"
+        operator: ">="
+        value: 1
+        severity: "error"
+
+# Quality Monitoring Rules
+quality_monitoring:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  warehouse_id: "6d2e141d82a63d88"
+  
+  checks:
+    - name: "schema_validation"
+      description: "Validate all tables match expected schema"
+      frequency: "daily"
+      severity: "error"
+    
+    - name: "completeness_check"
+      description: "Check data completeness across all tables"
+      frequency: "daily"
+      severity: "warning"
+    
+    - name: "freshness_check"
+      description: "Ensure data is updated within SLA timeframe"
+      frequency: "hourly"
+      severity: "error"
+    
+    - name: "referential_integrity"
+      description: "Validate relationships between tables"
+      frequency: "daily"
+      severity: "warning"
+
+  alerts:
+    - name: "quality_failure"
+      condition: "error"
+      notification_channels:
+        - email: "melissaslattery@gmail.com"
+    
+    - name: "sla_breach"
+      condition: "sla_violation"
+      notification_channels:
+        - email: "melissaslattery@gmail.com"
+
+# Breaking Change Policy
+breaking_changes:
+  policy: "requires_approval"
+  notification_required: true
+  deprecation_period: "90d"
+  
+  examples:
+    - type: "column_removal"
+      severity: "breaking"
+    - type: "column_type_change"
+      severity: "breaking"
+    - type: "column_rename"
+      severity: "breaking"
+    - type: "column_addition"
+      severity: "non_breaking"
+    - type: "constraint_addition"
+      severity: "non_breaking"
+
+# Governance and Compliance
+governance:
+  data_classification: "internal"
+  pii_present: false
+  regulatory_requirements: []
+  access_control: "role_based"
+  
+  tags:
+    - source: "abs"
+    - domain: "trade"
+    - classification: "internal"
+    - freshness: "daily"

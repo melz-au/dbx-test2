@@ -2,6 +2,12 @@
 bundle:
   name: "data_product"
 
+# Variables used across the bundle
+variables:
+  warehouse_id:
+    description: "SQL Warehouse ID for dashboard queries"
+    default: "6d2e141d82a63d88"
+
 include:
   - resources/*.yml
   - resources/*/*.yml
@@ -13,6 +19,8 @@ targets:
     default: true
     workspace:
       host: https://dbc-1eff0d8e-9619.cloud.databricks.com
+    variables:
+      warehouse_id: "6d2e141d82a63d88"
 
   # The 'prod' target, used for production deployment.
   prod:
@@ -25,3 +33,5 @@ targets:
       # This runs as melissaslattery@gmail.com in production. We could also use a service principal here,
       # see https://docs.databricks.com/dev-tools/bundles/permissions.html.
       user_name: melissaslattery@gmail.com
+    variables:
+      warehouse_id: "6d2e141d82a63d88"

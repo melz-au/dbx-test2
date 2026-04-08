@@ -1,0 +1,34 @@
+# ABS Trade Data Table References
+# 
+# NOTE: This bundle does NOT create or manage these tables.
+# It documents existing tables that the bundle depends on.
+# Ensure these tables exist before deploying.
+
+# Unity Catalog Table References (Documentation Only)
+# These tables must exist in your workspace:
+
+# Primary ABS Trade Tables
+# - workspace.abs_trade.metadata
+#   Structured metadata about ABS trade dataflows
+#   Columns: agency_id, description, id, is_final, name, structure_urn, urn, version
+#
+# - workspace.abs_trade.raw_json
+#   Raw API responses from ABS
+#   Columns: raw_json
+#
+# State-Level ABS Trade Tables
+# - workspace.default.abs_trade_serv_state_cy_metadata
+#   State-level trade metadata
+#   Columns: agency_id, description, id, is_final, name, structure_urn, urn, version
+#
+# - workspace.default.abs_trade_serv_state_cy_raw_json
+#   State-level trade raw data
+#   Columns: raw_json
+
+# To verify tables exist, run:
+# SHOW TABLES IN workspace.abs_trade;
+# SHOW TABLES IN workspace.default LIKE 'abs_trade%';
+
+# Bundle resources can be added here if you want to create
+# derived tables, views, or other Unity Catalog objects from these source tables
+resources: {}
