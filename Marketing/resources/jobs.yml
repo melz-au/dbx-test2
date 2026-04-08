@@ -19,15 +19,10 @@ resources:
         on_success:
           - melissaslattery@gmail.com
       
-      # Webhook notifications (optional)
-      # webhook_notifications:
-      #   on_failure:
-      #     - id: "slack_webhook"
-      
       # Job parameters
       parameters:
         - name: "contract_path"
-          default: "/Workspace/Users/melissaslattery@gmail.com/dbx-test2/data_product/resources/data_contract.yml"
+          default: "/Workspace/Users/melissaslattery@gmail.com/Testing DPs/Marketing/resources/data_contract.yml"
         - name: "fail_on_error"
           default: "true"
       
@@ -41,14 +36,7 @@ resources:
               contract_path: "{{job.parameters.contract_path}}"
               fail_on_error: "{{job.parameters.fail_on_error}}"
           
-          # Use serverless compute
-          new_cluster:
-            spark_version: "14.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 1
-            spark_conf:
-              "spark.databricks.delta.preview.enabled": "true"
-          
+          # Use serverless compute (no cluster spec needed)
           timeout_seconds: 3600
           max_retries: 2
           min_retry_interval_millis: 60000
@@ -63,12 +51,6 @@ resources:
       
       max_concurrent_runs: 1
       timeout_seconds: 7200
-      
-      # Git integration (optional)
-      # git_source:
-      #   git_url: "https://github.com/your-org/your-repo"
-      #   git_provider: "github"
-      #   git_branch: "main"
     
     # On-demand schema validation job
     abs_trade_schema_validation:
@@ -89,13 +71,9 @@ resources:
             notebook_path: "/Users/melissaslattery@gmail.com/quality_checks"
             base_parameters:
               check_type: "schema_only"
-              contract_path: "/Workspace/Users/melissaslattery@gmail.com/dbx-test2/data_product/resources/data_contract.yml"
+              contract_path: "/Workspace/Users/melissaslattery@gmail.com/Testing DPs/Marketing/resources/data_contract.yml"
           
-          new_cluster:
-            spark_version: "14.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 1
-          
+          # Use serverless compute (no cluster spec needed)
           timeout_seconds: 1800
       
       tags:
